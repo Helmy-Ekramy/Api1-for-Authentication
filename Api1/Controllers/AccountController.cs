@@ -92,6 +92,20 @@ namespace Api1.Controllers
 
         }
 
+        [HttpDelete("/Logout")]
+        public async Task<IActionResult> Logout([FromBody] string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return BadRequest();
+            var result = await accountServices.LogoutUserAsync(token);
+            if (result.IsSuccess)
+            {
+                return Ok(result.Message);
+            }
+            return BadRequest(result.Message);
+        }
+
+
         [HttpGet("/SendEmailConfirmation")]
 
         public async Task<IActionResult> SendEmail(string email)

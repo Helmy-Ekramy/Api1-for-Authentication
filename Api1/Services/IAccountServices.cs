@@ -10,6 +10,8 @@ namespace Api1.Services
         Task<GeneralResponse> RegisterUserAsync(RegisterModel registerModel);
         Task<GeneralResponse> LoginUserAsync(LoginModel loginModel);
 
+        Task<GeneralResponse> LogoutUserAsync(string userId);
+
         Task<GeneralResponse> ConfirmEmailAsync(string userId, string token);
 
         Task<GeneralResponse> ResendEmailAsync(string email);

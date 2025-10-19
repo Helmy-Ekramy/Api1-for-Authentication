@@ -14,11 +14,11 @@ namespace Api1.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IjwtServices _jwt;
-         private readonly IEmailServices _emailServices;
+        private readonly IEmailServices _emailServices;
         private readonly Api1Context db;
         private object jwt;
 
-        public AccountServices(UserManager<ApplicationUser> userManager,IjwtServices jwt,IEmailServices emailServices,Api1Context db)
+        public AccountServices(UserManager<ApplicationUser> userManager, IjwtServices jwt, IEmailServices emailServices, Api1Context db)
         {
             _userManager = userManager;
             _jwt = jwt;
@@ -26,18 +26,18 @@ namespace Api1.Services
             this.db = db;
         }
 
-      
+
 
         public async Task<GeneralResponse> RegisterUserAsync(RegisterModel registerUser)
         {
-                var User = new ApplicationUser();
-                User.Email = registerUser.Email;
-                User.UserName = registerUser.Name;
-                User.Address = registerUser.Address;
+            var User = new ApplicationUser();
+            User.Email = registerUser.Email;
+            User.UserName = registerUser.Name;
+            User.Address = registerUser.Address;
 
-            
 
-                var result = await _userManager.CreateAsync(User, registerUser.Password);
+
+            var result = await _userManager.CreateAsync(User, registerUser.Password);
 
             if (result.Succeeded)
             {
@@ -56,7 +56,7 @@ namespace Api1.Services
         public async Task<GeneralResponse> LoginUserAsync(LoginModel loginUser)
         {
 
-            var User = await _userManager.Users.Include(u=>u.RefreshTokens).FirstOrDefaultAsync(u=>u.UserName==loginUser.UserName);
+            var User = await _userManager.Users.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.UserName == loginUser.UserName);
 
             if (User != null)
             {
@@ -65,7 +65,7 @@ namespace Api1.Services
                 if (found)
                 {
 
-                    if(!User.EmailConfirmed)
+                    if (!User.EmailConfirmed)
                     {
                         return new GeneralResponse
                         {
@@ -75,14 +75,14 @@ namespace Api1.Services
                     }
 
 
-                    var oldRefreshTokens=User.RefreshTokens.Where(r=>r.IsActive).ToList();
+                    var oldRefreshTokens = User.RefreshTokens.Where(r => r.IsActive).ToList();
 
                     foreach (var item in oldRefreshTokens)
                     {
                         item.Revoked = DateTime.Now;
                     }
 
-               
+
 
 
 
@@ -119,7 +119,7 @@ namespace Api1.Services
         public async Task<GeneralResponse> ConfirmEmailAsync(string userId, string token)
         {
 
-           return await _emailServices.ConfirmEmailAsync(userId, token);
+            return await _emailServices.ConfirmEmailAsync(userId, token);
         }
 
 
@@ -174,7 +174,7 @@ namespace Api1.Services
             };
         }
 
-        public  RefreshTokens GenerateRefreshToken()
+        public RefreshTokens GenerateRefreshToken()
         {
 
             var newRefreshToken = new RefreshTokens();
@@ -189,14 +189,14 @@ namespace Api1.Services
 
         public async Task<GeneralResponse> RefreshTokenAsync(string token)
         {
-            var user = await _userManager.Users.Include(u=>u.RefreshTokens).FirstOrDefaultAsync(u=>u.RefreshTokens.Any(r=>r.Token==token));
+            var user = await _userManager.Users.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.RefreshTokens.Any(r => r.Token == token));
 
             if (user == null)
             {
                 return new GeneralResponse
                 {
-                    IsSuccess= false,
-                    Message= "Invalid token"
+                    IsSuccess = false,
+                    Message = "Invalid token"
                 };
             }
 
@@ -237,7 +237,7 @@ namespace Api1.Services
                 Message = "Token refreshed"
             };
 
-            }
+        }
 
 
         public async Task<GeneralResponse> GoogleSignInAsync(GoogleSignInDto idToken)
@@ -247,7 +247,7 @@ namespace Api1.Services
                 Audience = new[] { "255560464621-bl13orub7g4o8mrop5mce38qh02trerj.apps.googleusercontent.com" }
             });
 
-            var user = await _userManager.Users.Include(u=>u.RefreshTokens).FirstOrDefaultAsync(u=>u.Email==payload.Email);
+            var user = await _userManager.Users.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.Email == payload.Email);
 
             if (user == null)
             {
@@ -280,7 +280,8 @@ namespace Api1.Services
             var token = await _jwt.GenerateTokenAsync(user);
 
 
-            return new GeneralResponse {
+            return new GeneralResponse
+            {
                 IsSuccess = true,
                 JwtToken = token.JwtToken,
                 RefreshToken = refreshToken.Token,
@@ -290,6 +291,30 @@ namespace Api1.Services
             ;
         }
 
+        public async Task<GeneralResponse> LogoutUserAsync(string userId)
+        {
+            var user = await _userManager.Users.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.Id == userId);
 
+            if (user == null)
+            {
+                return new GeneralResponse
+                {
+                    IsSuccess = false,
+                    Message = "User not found"
+                };
+            }
+
+
+            user.RefreshTokens.Clear();
+            await _userManager.UpdateAsync(user);
+
+            return new GeneralResponse
+            {
+                IsSuccess = true,
+                Message = "Logout successful"
+            };
+
+
+        }
     }
 }
