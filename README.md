@@ -34,7 +34,7 @@ It supports email/password registration with confirmation, login using JWT acces
 ## 🔧 Quickstart (local)
 
 Prerequisites:
-- .NET 8 SDK
+- .NET 9 SDK
 - SQL Server (local or Docker)
 - Optional: dotnet-ef (tools) for migrations
 
